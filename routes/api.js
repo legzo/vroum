@@ -59,6 +59,7 @@ router.get('/cars', function(req, res) {
         const maxPrice = Math.max(...foundCars.map(car => car.price));
 
         let cheapCars = foundCars.filter(car => car.price === minPrice);
+        let expensiveCars = foundCars.filter(car => car.price === maxPrice);
 
         var elapsed = perfy.end('request');
 
@@ -68,7 +69,8 @@ router.get('/cars', function(req, res) {
             results : foundCars.length,
             maxPrice : maxPrice,
             minPrice : minPrice,
-            cheapest : cheapCars
+            cheapest : cheapCars,
+            mostExpensive : expensiveCars
           },
           cars : foundCars
         };
