@@ -3,6 +3,9 @@ let router = express.Router();
 let request = require('request');
 let cheerio = require('cheerio');
 let colors = require('colors');
+var perfy = require('perfy');
+
+const maxResults = 30;
 
 let getNumericField = function($, subNode, selector, patternToRemove) {
   let fieldValue = subNode.find($(selector)).first().text();
@@ -30,10 +33,12 @@ router.get('/', function(req, res) {
   //const url = 'http://www.lacentrale.fr/listing_auto.php?marque=SKODA&modele=SUPERB&mo_comm=SUPERB+3';
   const url = 'http://www.lacentrale.fr/listing_auto.php?marque=SKODA';
 
+  perfy.start('request');
+
   request.get({
       url: url,
       headers: {
-        'Cookie': 'NAPP=300'
+        'Cookie': 'NAPP=' + maxResults
       },
       jar: true
     }, function(error, response, body) {
@@ -65,8 +70,11 @@ router.get('/', function(req, res) {
 
         let cheapCars = foundCars.filter(car => car.price === minPrice);
 
+        var elapsed = perfy.end('request');
+
         let result = {
           infos : {
+            elapsed : elapsed.time,
             results : foundCars.length,
             maxPrice : maxPrice,
             minPrice : minPrice,
