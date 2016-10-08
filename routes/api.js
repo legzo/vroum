@@ -1,6 +1,7 @@
 let express = require('express');
 let router = express.Router();
 let request = require('request');
+var rp = require('request-promise');
 let cheerio = require('cheerio');
 let colors = require('colors');
 var perfy = require('perfy');
@@ -13,59 +14,64 @@ router.get('/cars', function(req, res) {
 
   perfy.start('request');
 
-  request.get(getSearchParams(req), function(error, response, body) {
+  let result = {};
 
-      if (!error && response.statusCode == 200) {
-        console.log('search OK'.green);
-        const $ = cheerio.load(body);
-
-        const cars = $('a.ann');
-        let foundCars = [];
-
-        for (let i = 0; i < cars.length; i++) {
-          let car = cars[i];
-          let foundCar = {};
-          
-          foundCar.url = getCarUrl(car.attribs['href']);
-          foundCar.name = getCarName($, $(car));
-          foundCar.imageUrl = getCarImageUrl($, $(car));
-          foundCar.location = getNumericField($, $(car), '.pictoFrance');
-          foundCar.year = getNumericField($, $(car), '.fieldYear');
-          foundCar.mileage = getNumericField($, $(car), '.fieldMileage', 'km');
-          foundCar.price = getNumericField($, $(car), '.fieldPrice', '€');
-
-          foundCars.push(foundCar);
-        }
-
-        const minPrice = Math.min(...foundCars.map(car => car.price));
-        const maxPrice = Math.max(...foundCars.map(car => car.price));
-
-        let cheapCars = foundCars.filter(car => car.price === minPrice);
-        let expensiveCars = foundCars.filter(car => car.price === maxPrice);
-
-        var elapsed = perfy.end('request');
-
-        let result = {
-          infos : {
-            elapsed : elapsed.time,
-            results : foundCars.length,
-            maxPrice : maxPrice,
-            minPrice : minPrice,
-            cheapest : cheapCars,
-            mostExpensive : expensiveCars
-          },
-          cars : foundCars
-        };
-        
-        res.json(result);
-
-      } else {
-        console.log('search KO'.red);
-        res.json({ msg : 'error occured :/'});
-      }    
-    });
-  
+  rp(getSearchParams(req))
+    .then(function(body) {
+      console.log('search OK'.green);
+      let result = getResultsFromResponse(body);
+      res.json(result);
+    })
+    .catch(function (err) {
+      console.log('search KO'.red);
+      result = { msg : 'error occured :/'};
+      res.json(result);
+    });    
 });
+
+let getResultsFromResponse = function(body) {
+      const $ = cheerio.load(body);
+
+      const cars = $('a.ann');
+      let foundCars = [];
+
+      for (let i = 0; i < cars.length; i++) {
+        let car = cars[i];
+        let foundCar = {};
+        
+        foundCar.url = getCarUrl(car.attribs['href']);
+        foundCar.name = getCarName($, $(car));
+        foundCar.imageUrl = getCarImageUrl($, $(car));
+        foundCar.location = getNumericField($, $(car), '.pictoFrance');
+        foundCar.year = getNumericField($, $(car), '.fieldYear');
+        foundCar.mileage = getNumericField($, $(car), '.fieldMileage', 'km');
+        foundCar.price = getNumericField($, $(car), '.fieldPrice', '€');
+
+        foundCars.push(foundCar);
+      }
+
+      const minPrice = Math.min(...foundCars.map(car => car.price));
+      const maxPrice = Math.max(...foundCars.map(car => car.price));
+
+      let cheapCars = foundCars.filter(car => car.price === minPrice);
+      let expensiveCars = foundCars.filter(car => car.price === maxPrice);
+
+      var elapsed = perfy.end('request');
+
+      result = {
+        infos : {
+          elapsed : elapsed.time,
+          results : foundCars.length,
+          maxPrice : maxPrice,
+          minPrice : minPrice,
+          cheapest : cheapCars,
+          mostExpensive : expensiveCars
+        },
+        cars : foundCars
+      };
+
+      return result;
+}
 
 let getNumericField = function($, subNode, selector, patternToRemove) {
   let fieldValue = subNode.find($(selector)).first().text();
