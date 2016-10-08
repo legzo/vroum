@@ -5,6 +5,7 @@ let cheerio = require('cheerio');
 let colors = require('colors');
 var perfy = require('perfy');
 
+const rootUrl = 'http://www.lacentrale.fr';
 const maxResults = 30;
 
 let getNumericField = function($, subNode, selector, patternToRemove) {
@@ -28,6 +29,15 @@ let getCarName = function($, carNode) {
   return name;
 }
 
+let getCarUrl = function(endOfUrl) {
+  return `${rootUrl}${endOfUrl}`;
+}
+
+let getCarImageUrl = function($, carNode) {
+  let imageUrl = carNode.find($('.imgContent>img')).first().attr('src')
+  return imageUrl.replace('-minivign', '');
+}
+
 router.get('/cars', function(req, res) {
 
   let brand = req.query.brand;
@@ -41,7 +51,7 @@ router.get('/cars', function(req, res) {
   }
 
   //const url = 'http://www.lacentrale.fr/listing_auto.php?marque=SKODA&modele=SUPERB&mo_comm=SUPERB+3';
-  const url = `http://www.lacentrale.fr/listing_auto.php?marque=${brand}&modele=${model}`; 
+  const url = `${rootUrl}/listing_auto.php?marque=${brand}&modele=${model}`; 
 
   perfy.start('request');
 
@@ -64,9 +74,9 @@ router.get('/cars', function(req, res) {
           let car = cars[i];
           let foundCar = {};
           
-          foundCar.url = car.attribs['href'];
+          foundCar.url = getCarUrl(car.attribs['href']);
           foundCar.name = getCarName($, $(car));
-          foundCar.imageUrl = $(car).find($('.imgContent>img')).first().attr('src');
+          foundCar.imageUrl = getCarImageUrl($, $(car));
           foundCar.location = getNumericField($, $(car), '.pictoFrance');
           foundCar.year = getNumericField($, $(car), '.fieldYear');
           foundCar.mileage = getNumericField($, $(car), '.fieldMileage', 'km');
