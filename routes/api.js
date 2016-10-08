@@ -6,32 +6,14 @@ let colors = require('colors');
 var perfy = require('perfy');
 
 const ROOT_URL = 'http://www.lacentrale.fr';
-const MAX_RESULTS = 30;
+const DEFAULT_MAX_RESULTS = 30;
 const DEFAULT_BRAND = 'SKODA';
 
 router.get('/cars', function(req, res) {
 
-  let brand = req.query.brand;
-  let model = req.query.model;
-
-  if(!brand) {
-    brand = DEFAULT_BRAND;
-  }
-  if(!model) {
-    model = '';
-  }
-
-  const url = `${ROOT_URL}/listing_auto.php?marque=${brand}&modele=${model}`; 
-
   perfy.start('request');
 
-  request.get({
-      url: url,
-      headers: {
-        'Cookie': 'NAPP=' + MAX_RESULTS
-      },
-      jar: true
-    }, function(error, response, body) {
+  request.get(getSearchParams(req), function(error, response, body) {
 
       if (!error && response.statusCode == 200) {
         console.log('search OK'.green);
@@ -113,6 +95,32 @@ let getCarUrl = function(endOfUrl) {
 let getCarImageUrl = function($, carNode) {
   let imageUrl = carNode.find($('.imgContent>img')).first().attr('src')
   return imageUrl.replace('-minivign', '');
+}
+
+let getSearchParams = function(req) {
+  let brand = req.query.brand;
+  let model = req.query.model;
+  let maxResults = req.query.maxResults;
+
+  if(!maxResults) {
+    maxResults = DEFAULT_MAX_RESULTS;
+  }
+
+  if(!brand) {
+    brand = DEFAULT_BRAND;
+  }
+  if(!model) {
+    model = '';
+  }
+
+  return {
+      url: `${ROOT_URL}/listing_auto.php?marque=${brand}&modele=${model}`,
+      headers: {
+        'Cookie': 'NAPP=' + maxResults
+      },
+      jar: true
+    }
+
 }
 
 module.exports = router;
