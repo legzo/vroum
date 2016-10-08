@@ -5,38 +5,9 @@ let cheerio = require('cheerio');
 let colors = require('colors');
 var perfy = require('perfy');
 
-const rootUrl = 'http://www.lacentrale.fr';
-const maxResults = 30;
-
-let getNumericField = function($, subNode, selector, patternToRemove) {
-  let fieldValue = subNode.find($(selector)).first().text();
-  if(patternToRemove) {
-    fieldValue = fieldValue.replace(patternToRemove, '');
-  }
-
-  return parseInt(fieldValue.replace(/\s/g, ""), 10);
-}
-
-let getCarName = function($, carNode) {
-  let name = '';
-
-  carNode.find($('h3 span')).each(function(i, elem) {
-    let text = $(this).text();
-    name += $(this).text().trim();
-    name += ' ';
-  });
-
-  return name;
-}
-
-let getCarUrl = function(endOfUrl) {
-  return `${rootUrl}${endOfUrl}`;
-}
-
-let getCarImageUrl = function($, carNode) {
-  let imageUrl = carNode.find($('.imgContent>img')).first().attr('src')
-  return imageUrl.replace('-minivign', '');
-}
+const ROOT_URL = 'http://www.lacentrale.fr';
+const MAX_RESULTS = 30;
+const DEFAULT_BRAND = 'SKODA';
 
 router.get('/cars', function(req, res) {
 
@@ -44,21 +15,20 @@ router.get('/cars', function(req, res) {
   let model = req.query.model;
 
   if(!brand) {
-    brand = 'SKODA';
+    brand = DEFAULT_BRAND;
   }
   if(!model) {
     model = '';
   }
 
-  //const url = 'http://www.lacentrale.fr/listing_auto.php?marque=SKODA&modele=SUPERB&mo_comm=SUPERB+3';
-  const url = `${rootUrl}/listing_auto.php?marque=${brand}&modele=${model}`; 
+  const url = `${ROOT_URL}/listing_auto.php?marque=${brand}&modele=${model}`; 
 
   perfy.start('request');
 
   request.get({
       url: url,
       headers: {
-        'Cookie': 'NAPP=' + maxResults
+        'Cookie': 'NAPP=' + MAX_RESULTS
       },
       jar: true
     }, function(error, response, body) {
@@ -112,5 +82,35 @@ router.get('/cars', function(req, res) {
     });
   
 });
+
+let getNumericField = function($, subNode, selector, patternToRemove) {
+  let fieldValue = subNode.find($(selector)).first().text();
+  if(patternToRemove) {
+    fieldValue = fieldValue.replace(patternToRemove, '');
+  }
+
+  return parseInt(fieldValue.replace(/\s/g, ""), 10);
+}
+
+let getCarName = function($, carNode) {
+  let name = '';
+
+  carNode.find($('h3 span')).each(function(i, elem) {
+    let text = $(this).text();
+    name += $(this).text().trim();
+    name += ' ';
+  });
+
+  return name;
+}
+
+let getCarUrl = function(endOfUrl) {
+  return `${ROOT_URL}${endOfUrl}`;
+}
+
+let getCarImageUrl = function($, carNode) {
+  let imageUrl = carNode.find($('.imgContent>img')).first().attr('src')
+  return imageUrl.replace('-minivign', '');
+}
 
 module.exports = router;
