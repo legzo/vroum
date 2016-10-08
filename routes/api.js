@@ -28,10 +28,20 @@ let getCarName = function($, carNode) {
   return name;
 }
 
-router.get('/', function(req, res) {
+router.get('/cars', function(req, res) {
+
+  let brand = req.query.brand;
+  let model = req.query.model;
+
+  if(!brand) {
+    brand = 'SKODA';
+  }
+  if(!model) {
+    model = '';
+  }
 
   //const url = 'http://www.lacentrale.fr/listing_auto.php?marque=SKODA&modele=SUPERB&mo_comm=SUPERB+3';
-  const url = 'http://www.lacentrale.fr/listing_auto.php?marque=SKODA';
+  const url = `http://www.lacentrale.fr/listing_auto.php?marque=${brand}&modele=${model}`; 
 
   perfy.start('request');
 
