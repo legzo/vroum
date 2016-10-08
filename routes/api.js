@@ -12,22 +12,27 @@ const DEFAULT_BRAND = 'SKODA';
 
 router.get('/cars', function(req, res) {
 
+  getResults(req)
+    .then((result) =>  res.json(result));
+
+});
+
+let getResults = function(req) {
   perfy.start('request');
 
-  let result = {};
-
-  rp(getSearchParams(req))
+  return rp(getSearchParams(req))
     .then(function(body) {
       console.log('search OK'.green);
       let result = getResultsFromResponse(body);
-      res.json(result);
+
+      return new Promise(function(resolve, reject) { 
+          resolve(result);
+      });
     })
     .catch(function (err) {
       console.log('search KO'.red);
-      result = { msg : 'error occured :/'};
-      res.json(result);
-    });    
-});
+    });   
+}
 
 let getResultsFromResponse = function(body) {
       const $ = cheerio.load(body);
@@ -56,9 +61,9 @@ let getResultsFromResponse = function(body) {
       let cheapCars = foundCars.filter(car => car.price === minPrice);
       let expensiveCars = foundCars.filter(car => car.price === maxPrice);
 
-      var elapsed = perfy.end('request');
+      let elapsed = perfy.end('request');
 
-      result = {
+      return {
         infos : {
           elapsed : elapsed.time,
           results : foundCars.length,
@@ -69,8 +74,6 @@ let getResultsFromResponse = function(body) {
         },
         cars : foundCars
       };
-
-      return result;
 }
 
 let getNumericField = function($, subNode, selector, patternToRemove) {
