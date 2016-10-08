@@ -21,16 +21,19 @@ let getCarName = function($, carNode) {
     name += $(this).text().trim();
     name += ' ';
   });
+
+  return name;
 }
 
 router.get('/', function(req, res) {
 
-  const url = 'http://www.lacentrale.fr/listing_auto.php?marque=SKODA&modele=SUPERB&mo_comm=SUPERB+3';
+  //const url = 'http://www.lacentrale.fr/listing_auto.php?marque=SKODA&modele=SUPERB&mo_comm=SUPERB+3';
+  const url = 'http://www.lacentrale.fr/listing_auto.php?marque=SKODA';
 
   request.get({
       url: url,
       headers: {
-        'Cookie': 'NAPP=100'
+        'Cookie': 'NAPP=300'
       },
       jar: true
     }, function(error, response, body) {
@@ -77,13 +80,8 @@ router.get('/', function(req, res) {
       } else {
         console.log('search KO'.red);
         res.json({ msg : 'error occured :/'});
-      }
-
-      
+      }    
     });
-
-
-  
   
 });
 
