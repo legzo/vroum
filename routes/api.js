@@ -20,6 +20,30 @@ router.get('/cars', function(req, res) {
 });
 
 
+router.get('/cars/:id', function(req, res) {
+
+  let id = req.params.id;
+
+  getCar(id)
+    .then((result) =>  res.json(result));
+
+});
+
+let getCar = function(id) {
+  return rp(getCarParams(id))
+    .then(function(body) {
+      console.log('car fetched'.green);
+      let result = getCarFromResponse(body);
+
+      return new Promise(function(resolve, reject) { 
+          resolve(result);
+      });
+    })
+    .catch(function (err) {
+      console.log('car could not be fetched'.red);
+    });  
+}
+
 let getResults = function(params) {
   perfy.start('request');
 
@@ -37,6 +61,25 @@ let getResults = function(params) {
     });   
 }
 
+let getCarFromResponse = function(body) {
+  const $ = cheerio.load(body);
+
+  var brand = $('h1.iophfzp')[0].children[0].data.trim();
+
+  var name = '';
+
+  $('h1.iophfzp').children().each(function(i, elem) {
+    name += $(this).text().trim();
+    name += ' ';
+  });
+
+  return {
+    brand: brand,
+    name : name
+  }
+
+}
+
 let getResultsFromResponse = function(body) {
       const $ = cheerio.load(body);
 
@@ -48,6 +91,7 @@ let getResultsFromResponse = function(body) {
         let foundCar = {};
         
         foundCar.url = getCarUrl(car.attribs['href']);
+        foundCar.brand = getCarBrand($, $(car));
         foundCar.name = getCarName($, $(car));
         foundCar.imageUrl = getCarImageUrl($, $(car));
         foundCar.location = getNumericField($, $(car), '.pictoFrance');
@@ -97,7 +141,11 @@ let getCarName = function($, carNode) {
     name += ' ';
   });
 
-  return name;
+  return name.trim();
+}
+
+let getCarBrand = function($, carNode) {
+  return carNode.find($('h3 span')).first().text().trim();
 }
 
 let getCarUrl = function(endOfUrl) {
@@ -107,6 +155,12 @@ let getCarUrl = function(endOfUrl) {
 let getCarImageUrl = function($, carNode) {
   let imageUrl = carNode.find($('.imgContent>img')).first().attr('src')
   return imageUrl.replace('-minivign', '');
+}
+
+let getCarParams = function(id) {
+  return {
+    url: `${ROOT_URL}/auto-occasion-annonce-${id}.html`
+  }
 }
 
 let getSearchParams = function(params) {
@@ -126,12 +180,12 @@ let getSearchParams = function(params) {
   }
 
   return {
-      url: `${ROOT_URL}/listing_auto.php?marque=${brand}&modele=${model}`,
-      headers: {
-        'Cookie': 'NAPP=' + maxResults
-      },
-      jar: true
-    }
+    url: `${ROOT_URL}/listing_auto.php?marque=${brand}&modele=${model}`,
+    headers: {
+      'Cookie': 'NAPP=' + maxResults
+    },
+    jar: true
+  }
 
 }
 
