@@ -12,15 +12,18 @@ const DEFAULT_BRAND = 'SKODA';
 
 router.get('/cars', function(req, res) {
 
-  getResults(req)
+  let params = req.query;
+
+  getResults(params)
     .then((result) =>  res.json(result));
 
 });
 
-let getResults = function(req) {
+
+let getResults = function(params) {
   perfy.start('request');
 
-  return rp(getSearchParams(req))
+  return rp(getSearchParams(params))
     .then(function(body) {
       console.log('search OK'.green);
       let result = getResultsFromResponse(body);
@@ -106,10 +109,10 @@ let getCarImageUrl = function($, carNode) {
   return imageUrl.replace('-minivign', '');
 }
 
-let getSearchParams = function(req) {
-  let brand = req.query.brand;
-  let model = req.query.model;
-  let maxResults = req.query.maxResults;
+let getSearchParams = function(params) {
+  let brand = params.brand;
+  let model = params.model;
+  let maxResults = params.maxResults;
 
   if(!maxResults) {
     maxResults = DEFAULT_MAX_RESULTS;
