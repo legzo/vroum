@@ -17,6 +17,7 @@
     "perfy": "^1.1.2",
     "request": "^2.67.0",
     "request-promise": "^4.1.1",
-    "serve-favicon": "~2.3.0"
+    "serve-favicon": "~2.3.0",
+    "winston": "^2.2.0"
   }
 }

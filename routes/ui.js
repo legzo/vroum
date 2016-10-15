@@ -1,27 +1,34 @@
 var express = require('express');
 var router = express.Router();
 var api = require('./api');
+var perfy = require('perfy');
 
+var logger = require('./logger');
 var crawler = require('./crawler');
 
 /* GET users listing. */
 router.get('/', function(req, res) {
 
   var results = [];
+  var queries = [];
 
-  var p1 = crawler.getCar('62108859')
-    .then((result) =>  results.push(result));
-  
-  var p2 = crawler.getCar('62034997')
-    .then((result) =>  results.push(result));
-  
-  Promise.all([p1, p2])
-    .then(function() {
-      res.render('cars', { title: 'Cars', cars: results });
-    })
-    .catch(() => console.log('error :/'));
+  crawler.getCars({brand: 'Skoda', model: 'superb'})
+    .then(function(data) {
+      for (let i = 0; i < data.cars.length; i++) {
+        queries.push(crawler.getCar(data.cars[i].id)
+                            .then((result) =>  results.push(result)));
+      }
 
-  
+      perfy.start('all-cars');
+      
+      Promise.all(queries)
+             .then(function() {
+               let elapsed = perfy.end('all-cars');
+               logger.info(`All done in ${elapsed.time}`);
+               res.render('cars', { title: 'Cars', cars: results });
+             })
+            .catch(() => logger.error('error :/'));
+    });
 
 });
 

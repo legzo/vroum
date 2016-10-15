@@ -5,6 +5,7 @@ var rp = require('request-promise');
 let cheerio = require('cheerio');
 let colors = require('colors');
 var perfy = require('perfy');
+var logger = require('./logger');
 
 const ROOT_URL = 'http://www.lacentrale.fr';
 const DEFAULT_MAX_RESULTS = 30;
@@ -12,11 +13,11 @@ const DEFAULT_BRAND = 'SKODA';
 
 let getCar = function(id) {
   perfy.start(`request-${id}`);  
-  console.log(`Getting car ${id}`);
+  
   return rp(getCarParams(id))
     .then(function(body) {
       let elapsed = perfy.end(`request-${id}`);  
-      console.log(`car ${id} fetched in ${elapsed.time}ms`.green);
+      logger.info(`car ${id} fetched in ${elapsed.time}ms`.green);
       let result = getCarFromResponse(body);
 
       return new Promise(function(resolve, reject) { 
@@ -24,7 +25,7 @@ let getCar = function(id) {
       });
     })
     .catch(function (err) {
-      console.log('car could not be fetched'.red);
+      logger.error('car could not be fetched'.red);
     });  
 }
 
@@ -33,7 +34,7 @@ let getCars = function(params) {
 
   return rp(getSearchParams(params))
     .then(function(body) {
-      console.log('search OK'.green);
+      logger.info('search OK'.green);
       let result = getResultsFromResponse(body);
 
       return new Promise(function(resolve, reject) { 
@@ -41,7 +42,7 @@ let getCars = function(params) {
       });
     })
     .catch(function (err) {
-      console.log('search KO'.red);
+      logger.error('search KO'.red);
     });   
 }
 
@@ -75,6 +76,7 @@ let getResultsFromResponse = function(body) {
         let foundCar = {};
         
         foundCar.url = getCarUrl(car.attribs['href']);
+        foundCar.id = foundCar.url.match(/[0-9]+/)[0];
         foundCar.brand = getCarBrand($, $(car));
         foundCar.name = getCarName($, $(car));
         foundCar.imageUrl = getCarImageUrl($, $(car));
