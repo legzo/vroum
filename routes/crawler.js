@@ -6,16 +6,17 @@ let cheerio = require('cheerio');
 let colors = require('colors');
 var perfy = require('perfy');
 
-
 const ROOT_URL = 'http://www.lacentrale.fr';
 const DEFAULT_MAX_RESULTS = 30;
 const DEFAULT_BRAND = 'SKODA';
 
-
 let getCar = function(id) {
+  perfy.start(`request-${id}`);  
+  console.log(`Getting car ${id}`);
   return rp(getCarParams(id))
     .then(function(body) {
-      console.log('car fetched'.green);
+      let elapsed = perfy.end(`request-${id}`);  
+      console.log(`car ${id} fetched in ${elapsed.time}ms`.green);
       let result = getCarFromResponse(body);
 
       return new Promise(function(resolve, reject) { 
