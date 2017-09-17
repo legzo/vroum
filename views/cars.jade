@@ -3,6 +3,12 @@ extends layout
 block content
   h1= title
   p Welcome to the list of cars
-  ul
-    each car in cars
-      li= car.name
+  div
+    table
+      tbody
+        each car, i in cars
+          tr
+            td= car.brand
+            td 
+              a(href=car.url) #{car.name}
+            td= car.price

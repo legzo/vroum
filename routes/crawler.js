@@ -18,13 +18,13 @@ let getCar = function(id) {
     .then(function(body) {
       let elapsed = perfy.end(`request-${id}`);  
       logger.info(`car ${id} fetched in ${elapsed.time}ms`.green);
-      let result = getCarFromResponse(body);
+      let result = getCarFromResponse(body, id);
 
-      return new Promise(function(resolve, reject) { 
+      return new Promise(function(resolve) { 
           resolve(result);
       });
     })
-    .catch(function (err) {
+    .catch(function () {
       logger.error('car could not be fetched'.red);
     });  
 }
@@ -37,30 +37,36 @@ let getCars = function(params) {
       logger.info('search OK'.green);
       let result = getResultsFromResponse(body);
 
-      return new Promise(function(resolve, reject) { 
+      return new Promise(function(resolve) { 
           resolve(result);
       });
     })
-    .catch(function (err) {
+    .catch(function () {
       logger.error('search KO'.red);
     });   
 }
 
-let getCarFromResponse = function(body) {
+let getCarFromResponse = function(body, id) {
+
   const $ = cheerio.load(body);
 
-  var brand = $('h1.iophfzp')[0].children[0].data.trim();
+  var brand = $('h1.iophfzp')[0].children[1].firstChild.data.trim().replace(/\s\s.+/g, '');
 
   var name = '';
 
-  $('h1.iophfzp').children().each(function(i, elem) {
-    name += $(this).text().trim();
+  $('h1.iophfzp').children().each(function() {
+    name += $(this).text().trim().replace(/\s\s+/g, ' ');
     name += ' ';
   });
 
+  name = name.trim();
+
   return {
-    brand: brand,
-    name : name
+    id : id,
+    url : getCarParams(id).url,
+    brand : brand,
+    name : name,
+    price : getNumericField($, $('div.gpfzj.sizeD'), 'strong', '€')
   }
 
 }
@@ -121,9 +127,9 @@ let getNumericField = function($, subNode, selector, patternToRemove) {
 let getCarName = function($, carNode) {
   let name = '';
 
-  carNode.find($('h3 span')).each(function(i, elem) {
+  carNode.find($('h3 span')).each(function() {
     let text = $(this).text();
-    name += $(this).text().trim();
+    name += text.trim();
     name += ' ';
   });
 
@@ -144,6 +150,9 @@ let getCarImageUrl = function($, carNode) {
 }
 
 let getCarParams = function(id) {
+
+  logger.info(`${ROOT_URL}/auto-occasion-annonce-${id}.html`);
+
   return {
     url: `${ROOT_URL}/auto-occasion-annonce-${id}.html`
   }
