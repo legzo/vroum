@@ -150,9 +150,6 @@ let getCarImageUrl = function($, carNode) {
 }
 
 let getCarParams = function(id) {
-
-  logger.info(`${ROOT_URL}/auto-occasion-annonce-${id}.html`);
-
   return {
     url: `${ROOT_URL}/auto-occasion-annonce-${id}.html`
   }

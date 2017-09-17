@@ -3,12 +3,22 @@ extends layout
 block content
   h1= title
   p Welcome to the list of cars
+  
+  p 
+    strong Most expensive: 
+    span #{mostExpensive.price}€ - #{mostExpensive.name}
+
+  p 
+    strong Cheapest: 
+    span #{cheapest.price}€ - #{cheapest.name}
+
   div
     table
       tbody
         each car, i in cars
           tr
-            td= car.brand
+            td 
+              strong #{car.brand}
             td 
               a(href=car.url) #{car.name}
-            td= car.price
+            td #{car.price}€
